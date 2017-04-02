@@ -2309,8 +2309,6 @@ void CPathPlanDlg::OnButtonCatchMode() {
 	//start_linear = clock();
 }
 
-
-
 /*********************added by gjx, not use the MATLAB  **********************
 DWORD WINAPI OnBnClickedButtonGo(LPVOID lpParameter)
 {//µ÷ÓÃmatlab³ÌÐò
