@@ -37,6 +37,7 @@ double VelocityLimit[6]={0,0,0,0,0,0};
 // CPathPlanDlg dialog
 
 using namespace xn;
+using namespace cv;
 
 XnStatus eResult;
 Context mContext;
@@ -53,7 +54,7 @@ IplImage * bgrImg ;
 IplImage * depthImg ;
 IplImage * depthImg1 ;
 IplImage * rgbImg ;
-IplImage *image;
+IplImage *image;   
 
 bool StartBtnFlag;
 bool flag_check;
@@ -203,6 +204,7 @@ BEGIN_MESSAGE_MAP(CPathPlanDlg, CDialog)
 	ON_WM_KEYUP()
 	ON_BN_CLICKED(IDC_CAMERA, &CPathPlanDlg::OnButtonCamera)
 	ON_BN_CLICKED(IDC_BUTTON_CATCHMODE, &CPathPlanDlg::OnButtonCatchMode)
+	ON_BN_CLICKED(IDC_BUTTON_SHUTCAMERA, &CPathPlanDlg::OnButtonShutCamera)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -470,6 +472,8 @@ void CPathPlanDlg::OnButtonReset()
 	m_JNT[5]=0;
 	m_JNT[6]=0;
 	m_JNT[7]=0;
+	for (int i = 0; i < JOINT_NUM; i++) 
+		des_angle[i] = m_JNT[i];
 	UpdateData(false);
 	((CSliderCtrl*)GetDlgItem(IDC_SLIDER_JNT0))->SetPos(0);
 	((CSliderCtrl*)GetDlgItem(IDC_SLIDER_JNT1))->SetPos(-7.5);
@@ -941,9 +945,6 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 	}
 	if (nIDEvent == 5)
 	{
-		if (COMPILE) {
-			_cprintf("Here in timer 5, beginning...\n");
-		}
 		eResult = mContext.WaitNoneUpdateAll();	///刷新数据的备份区域
 		depthMD = mDepthGenerator.GetDepthMap(); 
 		imgMD = mImageGenerator.GetImageMap();
@@ -1151,9 +1152,7 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
  			CvRect r=((CvContour*)cont)->rect;
  			if (r.height*r.width<9000&&r.height*r.width>200)//判断语句必须加  否则输出的永远是320 240
  			{
-				if (COMPILE) {
-					_cprintf("begin to draw the rectanglein rgbImg.\n");
-				}
+				
  				cvRectangle(rgbImg,cvPoint(r.x,r.y),cvPoint(r.x+r.width,r.y+r.height),CV_RGB(0,255,0),1,CV_AA,0); //画绿框
  				pixelx_green=r.x+0.5*r.width;
  				pixely_green=r.y+0.5*r.height;
@@ -1245,10 +1244,7 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 		float zz=0.0;
 		zz=base.Z;
 		
-		if (COMPILE) {
-			_cprintf("Before writing the result into file.\n");
-			system("pause");
-		}
+		
 		if ( zz>=0.5 && zz<0.9)//区别静止和运动
 		{
 			if (ttt==0)//
@@ -1270,12 +1266,10 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 						// assign the goal position and draw
 						
 						doc->drawGoalFlag = doc_real->drawGoalFlag = true;
-						doc->goalPos[0] = doc_real->goalPos[0] = base.X;
-						doc->goalPos[1] = doc_real->goalPos[1] = base.Y;
-						doc->goalPos[2] = doc_real->goalPos[2] = base.Z;
-						if (COMPILE) {
-							_cprintf("Here begin to redraw the model.\n");
-						}
+						doc->goalPos[0] = doc_real->goalPos[0] = base.X; // base.X+0.3;
+						doc->goalPos[1] = doc_real->goalPos[1] = base.Y; // base.Y-0.08;
+						doc->goalPos[2] = doc_real->goalPos[2] = base.Z; // (0.70+base.Z)/2+0.03;
+						
 						UpdateData(FALSE);
 						view->InvalidateRect(NULL, FALSE);
 						if (COMPILE) {
@@ -1286,7 +1280,7 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 						/*fprintf( goal, "%f  %f  %f\r\n",base.X,base.Y-0.09,base.Z+0.05);*/
 						//base.X = -0.7323; base.Y = -0.1291; base.Z = 0.6666;
 						//fprintf(goal, "%f  %f  %f\r\n",base.X,base.Y,base.Z);
-						fprintf(goal, "%f  %f  %f\r\n", base.X+0.3, base.Y-0.08, (0.70+base.Z)/2+0.03);//相对于己坐标系
+						fprintf(goal, "%f  %f  %f\r\n", base.X, base.Y, base.Z);//相对于己坐标系
 						fclose(goal);
 						if (COMPILE) {
 							_cprintf("Here end write writing file.\n");
@@ -2085,15 +2079,28 @@ void CPathPlanDlg::OnButtonCamera()
 	if (COMPILE) {
 		_cprintf("Here in function: onButtonCamera.\n");
 	}
+	eResult = XN_STATUS_OK;
 	eResult = mContext.Init();  
-	//CheckOpenNIError( eResult, "initialize context" );  
+	//CheckOpenNIError( eResult, "initialize context" ); 
+	if (eResult != XN_STATUS_OK) {
+		MessageBox("initialize context error.");
+		return;
+	}
 
 	// 3. create depth generator  
 	eResult = mDepthGenerator.Create( mContext ); 
+	if (eResult != XN_STATUS_OK) {
+		MessageBox("depth generator create context error.");
+		return;
+	}
 	//CheckOpenNIError( eResult, "Create depth generator" ); 
 
 	// 4. create image generator  	
-	eResult = mImageGenerator.Create( mContext );  
+	eResult = mImageGenerator.Create( mContext ); 
+	if (eResult != XN_STATUS_OK) {
+		MessageBox("image generator create context error.");
+		return;
+	}
 	//CheckOpenNIError( eResult, "Create image generator" );  
 	// 5. set map mode 
 	XnMapOutputMode mapMode; 
@@ -2101,7 +2108,15 @@ void CPathPlanDlg::OnButtonCamera()
 	mapMode.nYRes = 480;  
 	mapMode.nFPS =30; //帧数
 	eResult = mDepthGenerator.SetMapOutputMode( mapMode ); 
-	eResult = mImageGenerator.SetMapOutputMode( mapMode );  
+	if (eResult != XN_STATUS_OK) {
+		MessageBox("depth generator set map mode error.");
+		return;
+	}
+	eResult = mImageGenerator.SetMapOutputMode( mapMode ); 
+	if (eResult != XN_STATUS_OK) {
+		MessageBox("image generator set map mode error.");
+		return;
+	}
 	if (COMPILE) {
 		_cprintf("Here in function: onButtonCamera.\n");
 	}
@@ -2180,6 +2195,7 @@ void CPathPlanDlg::OnButtonCamera()
 	strcpy(savefile,file_dir);
 	strcat(savefile,txtName);
 
+	hz_first = 0;
 	if (COMPILE) {
 		_cprintf("Here end the function: onButtonCamera.\n");
 	}
@@ -2207,48 +2223,90 @@ void CPathPlanDlg::getCurrentJointAngel() {
 **move the arm.
 */
 void CPathPlanDlg::OnButtonCatchMode() {
-	FILE* goal = fopen("D:\\projects\\robot\\RobotControl-20150908\\matlabRRT\\goal.txt", "r");
-							/*fprintf( goal, "%f  %f  %f\r\n",base.X,base.Y-0.09,base.Z+0.05);*/
-							//base.X = -0.7323; base.Y = -0.1291; base.Z = 0.6666;
-							//fprintf(goal, "%f  %f  %f\r\n",base.X,base.Y,base.Z);
-	
-	fscanf(goal, "%f  %f  %f\r\n", &doc->goalPos[0], &doc->goalPos[1], &doc->goalPos[2]);//相对于己坐标系
-	int i = 0;
-	for (i = 0; i < 6; i++) 
-		doc_real->goalPos[i] = doc->goalPos[i];
-	fclose(goal);
+	// to read orbit data from existing path file.
+	FILE* road = fopen("D:\\projects\\robot\\RobotControl-20150908\\orbit\\road.txt", "r");
+	//*fprintf( goal, "%f  %f  %f\r\n",base.X,base.Y-0.09,base.Z+0.05);
+	//base.X = -0.7323; base.Y = -0.1291; base.Z = 0.6666;
+	//fprintf(goal, "%f  %f  %f\r\n",base.X,base.Y,base.Z);
+	float angle[8];
+	memset(angle, 0, sizeof(angle));
+	fscanf(road, "%f %f %f %f %f %f %f\r\n", &angle[1], &angle[2], &angle[3], &angle[4],
+		&angle[5], &angle[6], &angle[7]);
+	fclose(road);
+	CMainFrame *pframe;
+	pframe=(CMainFrame*)::AfxGetApp()->GetMainWnd();
 
-	Forwardkine_static(ini_ang, PEint);
-	for (i = 0; i < 6; i++)
-		PEend[i] = PEint[i];
-	PEend[0] = doc->goalPos[0];
-	PEend[1] = doc->goalPos[1];
-	PEend[2] = doc->goalPos[2];
+	int device=pframe->pSiderBar->pCtrlTab->pInitHardware->m_device;
 
-	// PEend: 3 to 5, how to define them is to be test.
-
-	doc->des_px = PEend[0];
-	doc->des_py = PEend[1];
-	doc->des_pz = PEend[2];
-	doc->des_aif = PEend[3];
-	doc->des_bit = PEend[4];
-	doc->des_gam = PEend[5];
-
-	doc->Lineartestflag=true;
-	UpdateData(FALSE);
-
-	kn = m_time/t0;
-	view->InvalidateRect(NULL, FALSE);
-
-	LinearMotionplan(ini_ang, basiniPE, PEint, PEend, m_time, m_ts, No, 0, next_baspe, next_basvel, next_ang, next_angvel);
-
-	for(int i=0;i<8;i++)
-	{	
-		ceta[0][i]=ini_ang[i];
-		ceta[1][i]=next_ang[i];//保存数据用
+	SetTimer(3, 100, NULL);
+	SetTimer(4, 100, NULL);
+	for (int i = 0; i < JOINT_NUM; i++) {
+		des_angle[i] = angle[i];
 	}
-	SetTimer(0,100,NULL);
-	start_linear = clock();
+	start = clock();
+
+	float ff, cons;
+	int t = -1;
+	for(int i=1;i<8;i++, t*= -1)
+	{
+		::PCube_resetModule(device, i);
+		if (::PCube_getPos(device, i, &ff) == 0) {
+			cons = t*ff*180/PI;
+			doc_real->m_Module[i].JntVar_rot = cons;
+			doc_real->jnt[i] = cons;
+			doc_real->angelset[i] = cons;
+		}
+	}
+
+	Sleep(3000);
+	for (int i = 1, t = -1; i < 8; i++, t *= -1) {
+		::PCube_moveRamp(device, i, t*angle[i]*PI/180, 2*PI/180, 4*PI/180);
+	}
+	
+	// to read goal from camera data and do path plan then.
+
+	//FILE* goal = fopen("D:\\projects\\robot\\RobotControl-20150908\\matlabRRT\\goal.txt", "r");
+	//						/*fprintf( goal, "%f  %f  %f\r\n",base.X,base.Y-0.09,base.Z+0.05);*/
+	//						//base.X = -0.7323; base.Y = -0.1291; base.Z = 0.6666;
+	//						//fprintf(goal, "%f  %f  %f\r\n",base.X,base.Y,base.Z);
+	//
+	//fscanf(goal, "%f  %f  %f\r\n", &doc->goalPos[0], &doc->goalPos[1], &doc->goalPos[2]);//相对于己坐标系
+	//int i = 0;
+	//for (i = 0; i < 6; i++) 
+	//	doc_real->goalPos[i] = doc->goalPos[i];
+	//fclose(goal);
+
+	//Forwardkine_static(ini_ang, PEint);
+	//for (i = 0; i < 6; i++)
+	//	PEend[i] = PEint[i];
+	//PEend[0] = doc->goalPos[0];
+	//PEend[1] = doc->goalPos[1];
+	//PEend[2] = doc->goalPos[2];
+
+	//// PEend: 3 to 5, how to define them is to be test.
+
+	//doc->des_px = PEend[0];
+	//doc->des_py = PEend[1];
+	//doc->des_pz = PEend[2];
+	//doc->des_aif = PEend[3];
+	//doc->des_bit = PEend[4];
+	//doc->des_gam = PEend[5];
+
+	//doc->Lineartestflag=true;
+	//UpdateData(FALSE);
+
+	//kn = m_time/t0;
+	//view->InvalidateRect(NULL, FALSE);
+
+	//LinearMotionplan(ini_ang, basiniPE, PEint, PEend, m_time, m_ts, No, 0, next_baspe, next_basvel, next_ang, next_angvel);
+
+	//for(int i=0;i<8;i++)
+	//{	
+	//	ceta[0][i]=ini_ang[i];
+	//	ceta[1][i]=next_ang[i];//保存数据用
+	//}
+	//SetTimer(0,100,NULL);
+	//start_linear = clock();
 }
 
 
@@ -2444,3 +2502,22 @@ DWORD WINAPI OnBnClickedButtonGo(LPVOID lpParameter)
 ///*}*/
 //	
 //}
+
+/************************************************************************/
+/* This function used to response the "shut down camera" button.                                                                     */
+/************************************************************************/
+void CPathPlanDlg::OnButtonShutCamera()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	KillTimer(5);
+	destroyAllWindows();
+	/*if (cvNamedWindow("result", 1) == 1) {
+		destroyWindow("result");
+	}
+	if (cvNamedWindow("depth", 1) == 1) {
+		destroyWindow("depth");
+	}
+	if (cvNamedWindow("rgbImg", 1) == 1) {
+		destroyWindow("rgbImg");
+	}*/
+}
