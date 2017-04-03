@@ -29,6 +29,14 @@ double VelocityLimit[6]={0,0,0,0,0,0};
 #define DIAMETER 0.058
 #define COMPILE false
 
+enum WorkingStatus {
+	SIMULATION = 0,
+	ROBOT_ARM
+};
+
+double min_ang[8] = {0, -PI, -PI/2, -PI, -2*PI/3, -PI, -5*PI/6, -PI};
+double max_ang[8] = {0, PI,   PI/2,  PI,  2*PI/3,  PI,  5*PI/6,  PI};
+
 // double size[6]={0,0.3,0.328,0.277,0.206,0.1};
 // double dh[8][4]={{0,-PI/2,d1,0},{0,PI/2,d2,0},{0,-PI/2,0,0},{0,PI/2,d3,0},{0,-PI/2,0,0},{0,PI/2,d4,0},{0,-PI/2,0,0},{0,PI/2,d5,0}};
 
@@ -239,7 +247,7 @@ BOOL CPathPlanDlg::OnInitDialog()
 	((CSliderCtrl*)GetDlgItem(IDC_SLIDER_JNT7))->SetTicFreq(36);
     ((CSliderCtrl*)GetDlgItem(IDC_SLIDER_JNT7))->SetPos(0);
 	
-	ControlMode=0;
+	ControlMode = SIMULATION;
 	((CButton*)GetDlgItem(IDC_RADIO_SUMU))->SetCheck(true);
 	//初始化参数
  //	init_robot_size(size);
@@ -365,7 +373,7 @@ void CPathPlanDlg::OnButtonSet()
 	}
 
 	view->InvalidateRect(NULL, FALSE);
-	if(ControlMode==1)	// control with schunk arm, added by gjx
+	if(ControlMode == ROBOT_ARM)	// control with schunk arm, added by gjx
 	{
 		int device=frame->pSiderBar->pCtrlTab->pInitHardware->m_device;
 		int PmacStateValue=frame->pSiderBar->pCtrlTab->pInitHardware->PmacstateValue;
@@ -499,7 +507,7 @@ void CPathPlanDlg::OnButtonReset()
 	
 	
 	view->InvalidateRect(NULL, FALSE);
-	if(ControlMode==1)
+	if(ControlMode == ROBOT_ARM)
 	{
 		int device=frame->pSiderBar->pCtrlTab->pInitHardware->m_device;
 		int PmacStateValue=frame->pSiderBar->pCtrlTab->pInitHardware->PmacstateValue;
@@ -567,7 +575,7 @@ void CPathPlanDlg::OnButtonInit()
 	PreProgrammFlag=0;
 	UpdateData(true);
 	//初始化参数
-	if (ControlMode==1)
+	if (ControlMode == ROBOT_ARM)
 	{
 		PmacGetResponseA(PMacdevice,buf,255,"j/");
 		PmacGetResponseA(PMacdevice,buf,255,"&1");
@@ -672,49 +680,13 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 		}
 		qmtomModule();
 		ShowJntVariable();
-		if (next_ang[1]<-PI||next_ang[1]>PI)
-		{
-			KillTimer(0);
-			AfxMessageBox("关节1越界");
-			return;
+		for (i = 1; i < 8; i++) {
+			if (next_ang[i] < min_ang[i] || max_ang[i] < next_ang[i]) {
+				KillTimer(0);
+				AfxMessageBox("关节越界");
+				return;
+			}
 		}
-		if (next_ang[2]<-PI/2||next_ang[2]>PI/2)
-		{
-			KillTimer(0);
-			AfxMessageBox("关节2越界");
-			return;
-		}
-		if (next_ang[3]<-PI||next_ang[3]>PI)
-		{
-			KillTimer(0);
-			AfxMessageBox("关节3越界");
-			return;
-		}
-		if (next_ang[4]<-2*PI/3||next_ang[4]>2*PI/3)
-		{
-			KillTimer(0);
-			AfxMessageBox("关节4越界");
-			return;
-		}
-		if (next_ang[5]<-PI||next_ang[5]>PI)
-		{
-			KillTimer(0);
-			AfxMessageBox("关节5越界");
-			return;
-		}
-		if (next_ang[6]<-5*PI/6||next_ang[6]>5*PI/6)
-		{
-			KillTimer(0);
-			AfxMessageBox("关节6越界");
-			return;
-		}
-		if ( next_ang[7]<-PI || next_ang[7]>PI )
-		{
-			KillTimer(0);
-			AfxMessageBox("关节7越界");
-			return;
-		}
-
 		for(i=0; i<8; i++)
 		{
 			ini_ang[i] = next_ang[i];
@@ -730,7 +702,7 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 		{	
 	   		ceta[No+1][i]=(float)next_ang[i];//保存数据用
 		}
-		if (ControlMode == 1)
+		if (ControlMode == ROBOT_ARM)
 		{
 			SendMessageToJXB();
 		}
@@ -774,40 +746,12 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 			KillTimer(1);
 			AfxMessageBox("运动学奇异");
 		}
-		if (next_ang[1]<-PI||next_ang[1]>PI)
-		{
-			KillTimer(1);
-			AfxMessageBox("关节1越界");
-		}
-		if (next_ang[2]<-PI/2||next_ang[2]>PI/2)
-		{
-			KillTimer(1);
-			AfxMessageBox("关节2越界");
-		}
-		if (next_ang[3]<-PI||next_ang[3]>PI)
-		{
-			KillTimer(1);
-			AfxMessageBox("关节3越界");
-		}
-		if (next_ang[4]<-2*PI/3||next_ang[4]>2*PI/3)
-		{
-			KillTimer(1);
-			AfxMessageBox("关节4越界");
-		}
-		if (next_ang[5]<-PI||next_ang[5]>PI)
-		{
-			KillTimer(1);
-			AfxMessageBox("关节5越界");
-		}
-		if (next_ang[6]<-5*PI/6||next_ang[6]>5*PI/6)
-		{
-			KillTimer(1);
-			AfxMessageBox("关节6越界");
-		}
-		if (next_ang[7]<-PI||next_ang[7]>PI)
-		{
-			KillTimer(1);
-			AfxMessageBox("关节7越界");
+		for (i = 1; i < 8; i++) {
+			if (next_ang[i] < min_ang[i] || max_ang[i] < next_ang[i]) {
+				KillTimer(0);
+				AfxMessageBox("关节越界");
+				return;
+			}
 		}
 		qmtomModule();
 		ShowJntVariable();
@@ -817,7 +761,7 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 		{	
 			ceta[No+1][i]=(float)next_ang[i];//保存数据用
 		}
-		if (ControlMode==1)
+		if (ControlMode == ROBOT_ARM)
 		{
 			SendMessageToJXB();
 		}
@@ -838,7 +782,7 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 		}
 		UpdateData(false);
 
-		if (ControlMode==1)
+		if (ControlMode == ROBOT_ARM)
 		{
 			CMainFrame *pframe;
 			pframe=(CMainFrame*)::AfxGetApp()->GetMainWnd();
@@ -894,7 +838,7 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 			}
 		}
 		end = clock();
-		if (end - start > 30000 || deviceIsHalt())
+		if (end - start > 20000 && deviceIsHalt())
 		{
 			KillTimer(3);
 		}
@@ -925,20 +869,19 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 					doc_real->m_Module[i].JntVar_rot += cons*t;
 					doc_real->jnt[i] += (float)cons*t;
 					doc_real->angelset[i] += (float)cons*t;
-					_cprintf("current angle for joint %d: %f\n", i, doc_real->jnt[i]);
+					if (COMPILE)
+						_cprintf("current angle for joint %d: %f\n", i, doc_real->jnt[i]);
 					//break;
 				}
 			}
 			if (COMPILE)
 				system("pause");
 		}
-
 		end = clock();
 		if (end - start > 30000 && simFinishMoving())
 		{
 			KillTimer(4);
 		}
-		
 		UpdateData(FALSE);
 		view->InvalidateRect(NULL, FALSE);
 	}
@@ -1617,7 +1560,7 @@ void CPathPlanDlg::OnButtonStop()
 		{
 			KillTimer(2);
 		}
-		if (ControlMode==1)
+		if (ControlMode == ROBOT_ARM)
 		{	
 //			PmacSetIVariableDouble(0,122,0);
 			PmacGetResponseA(PMacdevice,buf,255,"q");
@@ -1643,7 +1586,7 @@ void CPathPlanDlg::OnButtonStop()
 		{
 			SetTimer(2,100,NULL);
 		}
-		if (ControlMode==1)
+		if (ControlMode == ROBOT_ARM)
 		{
 //			PmacSetIVariableDouble(0,122,32);
 			PmacGetResponseA(PMacdevice,buf,255,"&1 R");
@@ -1652,8 +1595,9 @@ void CPathPlanDlg::OnButtonStop()
 				PCube_setRampVel(device,i,(float)2*PI/180);
 			}
 		}
-		SetDlgItemText(IDC_BUTTON_STOP,"暂 停");}
+		SetDlgItemText(IDC_BUTTON_STOP,"暂 停");
 	}
+}
 
 
 void CPathPlanDlg::OnRadioHandcontrol() 
@@ -1669,14 +1613,14 @@ void CPathPlanDlg::OnRadioHandcontrol()
 void CPathPlanDlg::OnRadioSumu() 
 {
 	// TODO: Add your control notification handler code here
-	ControlMode=0;
+	ControlMode = SIMULATION;
 	
 }
 
 void CPathPlanDlg::OnRadioJxb() 
 {
 	// TODO: Add your control notification handler code here
-	ControlMode=1;
+	ControlMode = ROBOT_ARM;
 	
 }
 
