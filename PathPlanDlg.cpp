@@ -26,7 +26,6 @@ double next_ang[8], next_angvel[8], next_baspe[6], next_basvel[6];
 double EndPE[Ni][6];
 double VelocityLimit[6]={0,0,0,0,0,0};
 #define CODEANGTRANS 22.7555555555555556
-#define PI 3.14159265359
 #define DIAMETER 0.058
 #define COMPILE false
 
@@ -366,11 +365,11 @@ void CPathPlanDlg::OnButtonSet()
 	}
 
 	view->InvalidateRect(NULL, FALSE);
-	if(ControlMode==1)
+	if(ControlMode==1)	// control with schunk arm, added by gjx
 	{
 		int device=frame->pSiderBar->pCtrlTab->pInitHardware->m_device;
 		int PmacStateValue=frame->pSiderBar->pCtrlTab->pInitHardware->PmacstateValue;
-		if(PmacStateValue)
+		if(PmacStateValue)	// if pmac is available, added by gjx
 		{
 			PosCts=(360*30*CODEANGTRANS*(-m_JNT[0]))/(PI*DIAMETER);
 			char PosStr[100];
@@ -381,15 +380,15 @@ void CPathPlanDlg::OnButtonSet()
 			PmacGetResponseA(PMacdevice,buf,255,outstr);
 				float p,v;
 			PmacGetResponseA(PMacdevice,buf,255,"p");
-			p=atof(buf);
+			p=(float)atof(buf);
 			PmacGetResponseA(PMacdevice,buf,255,"v");
-			v=atof(buf);
+			v=(float)atof(buf);
 			while(abs(p-PosCts)>50||v!=0)
 			{
 					PmacGetResponseA(PMacdevice,buf,255,"p");
-					p=atof(buf);
+					p=(float)atof(buf);
 					PmacGetResponseA(PMacdevice,buf,255,"v");
-					v=atof(buf);
+					v=(float)atof(buf);
 
 					PmacGetResponseA(PMacdevice,buf,255,"?"); 
         			char b=buf[9];
@@ -421,7 +420,7 @@ void CPathPlanDlg::OnButtonSet()
 		{
 			::PCube_resetModule(device,i);
 			if (::PCube_getPos(device, i, &ff) == 0) {
-				cons = t*ff*180/PI;
+				cons = (float)t*ff*180/PI;
 				doc_real->m_Module[i].JntVar_rot = cons;
 				doc_real->jnt[i] = cons;
 				doc_real->angelset[i] = cons;
@@ -433,9 +432,9 @@ void CPathPlanDlg::OnButtonSet()
 		}
 
 
-		Sleep(3000);
+		Sleep(3000);    // this is for delay time, where T(delay) is set to 3 seconds. added by gjx
 		for (int i = 1, t = -1; i < JOINT_NUM; i++, t *= -1) {
-			::PCube_moveRamp(device, i, t*m_JNT[i]*PI/180, 2*PI/180, 4*PI/180);
+			::PCube_moveRamp(device, i, (float)t*m_JNT[i]*PI/180, (float)2*PI/180, (float)4*PI/180);
 		}
 
 		/*
@@ -465,7 +464,7 @@ void CPathPlanDlg::OnButtonReset()
 {
 	// TODO: Add your control notification handler code here
 	m_JNT[0]=0;
-	m_JNT[1]=-7.5;
+	m_JNT[1]=0; // set to 0 here, -7.5 original.
 	m_JNT[2]=0;
 	m_JNT[3]=0;
 	m_JNT[4]=0;
@@ -476,7 +475,7 @@ void CPathPlanDlg::OnButtonReset()
 		des_angle[i] = m_JNT[i];
 	UpdateData(false);
 	((CSliderCtrl*)GetDlgItem(IDC_SLIDER_JNT0))->SetPos(0);
-	((CSliderCtrl*)GetDlgItem(IDC_SLIDER_JNT1))->SetPos(-7.5);
+	((CSliderCtrl*)GetDlgItem(IDC_SLIDER_JNT1))->SetPos(0);
 	((CSliderCtrl*)GetDlgItem(IDC_SLIDER_JNT2))->SetPos(0);
 	((CSliderCtrl*)GetDlgItem(IDC_SLIDER_JNT3))->SetPos(0);
 	((CSliderCtrl*)GetDlgItem(IDC_SLIDER_JNT4))->SetPos(0);
@@ -515,8 +514,8 @@ void CPathPlanDlg::OnButtonReset()
 			::PCube_moveRamp(device,
 				i,
 				0,
-				2*PI/180,
-				4*PI/180);
+				(float)2*PI/180,
+				(float)4*PI/180);
 			Sleep(2000);
 		}
 //		::PCube_moveRamp(device,1,-7.5*PI/180 ,4*PI/180,16*PI/180);
@@ -555,13 +554,13 @@ void CPathPlanDlg::OnButtonInit()
 	
     UpdateData(false);		
 	//将初始末端位姿赋给DOC类
-	doc->ini_px=PEI[0];
-	doc->ini_py=PEI[1];
-	doc->ini_pz=PEI[2];
+	doc->ini_px=(float)PEI[0];
+	doc->ini_py=(float)PEI[1];
+	doc->ini_pz=(float)PEI[2];
 	
-    doc->ini_aif=PEI[3]*180/PI;
-	doc->ini_bit=PEI[4]*180/PI;
-	doc->ini_gam=PEI[5]*180/PI;
+    doc->ini_aif=(float)PEI[3]*180/PI;
+	doc->ini_bit=(float)PEI[4]*180/PI;
+	doc->ini_gam=(float)PEI[5]*180/PI;
 	doc->No=No=0;
 	doc->numtime=numtime=0;
 	doc->Lineartestflag=false;
@@ -648,7 +647,7 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 	int SingularFlag=0;
 	double wcm[3]={0, 0, 0};
 	double now_baspe[6],now_basvel[6], now_angvel[8];
-    int i,j;
+    int i;
 	CString str;
 
 	if(nIDEvent==0)
@@ -720,8 +719,8 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 		{
 			ini_ang[i] = next_ang[i];
 		}
-		time_t cur_time = clock();
-		int prc_time = cur_time - start_linear;
+		clock_t cur_time = clock();
+		clock_t prc_time = cur_time - start_linear;
 		if (btn_release && prc_time > 500) {
 			KillTimer(0);
 		}
@@ -729,7 +728,7 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 		numtime++;
 		for(i=0;i<8;i++)
 		{	
-	   		ceta[No+1][i]=next_ang[i];//保存数据用
+	   		ceta[No+1][i]=(float)next_ang[i];//保存数据用
 		}
 		if (ControlMode == 1)
 		{
@@ -816,7 +815,7 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 		numtime++;
 		for(i=0;i<8;i++)
 		{	
-			ceta[No+1][i]=next_ang[i];//保存数据用
+			ceta[No+1][i]=(float)next_ang[i];//保存数据用
 		}
 		if (ControlMode==1)
 		{
@@ -856,9 +855,9 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 			{
 				::PCube_moveRamp(device,
 					i,
-					send_ang[i],
-					4*PI/180,
-					16*PI/180);
+					(float)send_ang[i],
+					(float)4*PI/180,
+					(float)16*PI/180);
 			}
 		}
 			No++;
@@ -887,7 +886,7 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 		for (int i = 0; i < JOINT_NUM; i++, t *= -1) {
 			if (::PCube_getPos(device, i, &ff) == 0)
 			{
-				cons = ff*180/PI*t;
+				cons = (float)ff*180/PI*t;
 				doc->m_Module[i].JntVar_rot = cons;
 				doc->jnt[i] = cons;
 				doc->angelset[i] = cons;
@@ -895,7 +894,7 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 			}
 		}
 		end = clock();
-		if (end - start > 30000 && deviceIsHalt())
+		if (end - start > 30000 || deviceIsHalt())
 		{
 			KillTimer(3);
 		}
@@ -924,8 +923,8 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 				}
 				if (t != 0) { 
 					doc_real->m_Module[i].JntVar_rot += cons*t;
-					doc_real->jnt[i] += cons*t;
-					doc_real->angelset[i] += cons*t;
+					doc_real->jnt[i] += (float)cons*t;
+					doc_real->angelset[i] += (float)cons*t;
 					_cprintf("current angle for joint %d: %f\n", i, doc_real->jnt[i]);
 					//break;
 				}
@@ -1006,8 +1005,8 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 			for(int i=0;i<640;i++)
 			{
 				idx=idxShift+i;
-				Point3D_image[idx].X=i;
-				Point3D_image[idx].Y=j;
+				Point3D_image[idx].X=(XnFloat)i;
+				Point3D_image[idx].Y=(XnFloat)j;
 				Point3D_image[idx].Z=mDepthMD[idx];
 			}
 		}
@@ -1021,7 +1020,7 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 			//hz3[i]=depthMD[i];
 
 
-			index[i]=0.0;
+			index[i]=0;
 
 			//if(Point3D_real[i].X>5&&Point3D_real[i].X<480&&Point3D_real[i].Y<600&&Point3D_real[i].Y>50)///////选择感兴趣的部分        index=0时会出现错误  故如果选择的感兴趣的区域没有障碍物就会在运行时出错
 			//if(Point3D_image[i].X>5&&Point3D_image[i].X<480&&Point3D_image[i].Y<600&&Point3D_image[i].Y>50)
@@ -1136,8 +1135,8 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 				if (r.height*r.width<9000&&r.height*r.width>200)//判断语句必须加  否则输出的永远是320 240
 				{
 					cvRectangle(rgbImg,cvPoint(r.x,r.y),cvPoint(r.x+r.width,r.y+r.height),CV_RGB(255,0,0),1,CV_AA,0); //画红框
-					pixelx_red=r.x+0.5*r.width;
-					pixely_red=r.y+0.5*r.height;
+					pixelx_red=(int)(r.x+0.5*r.width);
+					pixely_red=(int)(r.y+0.5*r.height);
 					z_r=Point3D_image[pixely_red*640+pixelx_red].Z;//写在里面
 				}
 			
@@ -1154,8 +1153,8 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
  			{
 				
  				cvRectangle(rgbImg,cvPoint(r.x,r.y),cvPoint(r.x+r.width,r.y+r.height),CV_RGB(0,255,0),1,CV_AA,0); //画绿框
- 				pixelx_green=r.x+0.5*r.width;
- 				pixely_green=r.y+0.5*r.height;
+ 				pixelx_green=(int)(r.x+0.5*r.width);
+ 				pixely_green=(int)(r.y+0.5*r.height);
  				z_g=Point3D_image[pixely_green*640+pixelx_green].Z;//写在里面
  			}
  
@@ -1208,11 +1207,11 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 			else
 			{
 				z=z_r;
-				x=((pixelx_red-cx)/fx)*z*0.001;
-				y=((pixely_red-cy)/fy)*z*0.001;
+				x=(float)((pixelx_red-cx)/fx)*z*0.001;
+				y=(float)((pixely_red-cy)/fy)*z*0.001;
 				c[0]= x;
 				c[1]= y;
-				c[2]= z*0.001;
+				c[2]= (float)z*0.001;
 				c[3]= 1;
 				Array_Multipy(inv_T,c,multipy);
 				s.Format("%f  %f  %f",
@@ -1225,11 +1224,11 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 		else
 		{
 			z=z_g;
-			x=((pixelx_green-cx)/fx)*z*0.001;
-			y=((pixely_green-cy)/fy)*z*0.001;
+			x=(float)((pixelx_green-cx)/fx)*z*0.001;
+			y=(float)((pixely_green-cy)/fy)*z*0.001;
 			c[0]= x;
 			c[1]= y;
-			c[2]= z*0.001;
+			c[2]= (float)z*0.001;
 			c[3]= 1;
 			Array_Multipy(inv_T,c,multipy);
 			s.Format("%f  %f  %f",
@@ -1261,7 +1260,8 @@ void CPathPlanDlg::OnTimer(UINT nIDEvent)
 						
 						if ((0.70+base.Z)/2<0.64)
 						{//桌子高度0.7，取目标物中点
-							(0.70+base.Z)/2 == 0.645;//机械臂的安全高度  ------??? what is he doing?
+							//(0.70+base.Z)/2 == 0.645;//机械臂的安全高度  ------??? what is he doing?
+							base.Z = 0.645 * 2 - 0.70;
 						}
 						// assign the goal position and draw
 						
@@ -1363,37 +1363,22 @@ bool CPathPlanDlg::deviceIsHalt()
 	int device=pframe->pSiderBar->pCtrlTab->pInitHardware->m_device;
 	float vel;
 	
-	float min_speed = 0.000001;
-	::PCube_getVel(device, 1, &vel);
-	if (min_speed < abs(vel))
-		return false;
-	::PCube_getVel(device, 2, &vel);
-	if (min_speed < abs(vel))
-		return false;
-	::PCube_getVel(device, 3, &vel);
-	if (min_speed < abs(vel))
-		return false;
-	::PCube_getVel(device, 4, &vel);
-	if (min_speed < abs(vel))
-		return false;
-	::PCube_getVel(device, 5, &vel);
-	if (min_speed < abs(vel))
-		return false;
-	::PCube_getVel(device, 6, &vel);
-	if (min_speed < abs(vel))
-		return false;
-	::PCube_getVel(device, 7, &vel);
-	if (min_speed < abs(vel))
-		return false;
+	float min_speed = 0.0001;
+	for (int i = 1; i <= 7; i++) {
+		::PCube_getVel(device, i, &vel);
+		if (min_speed < abs(vel)) {
+			return false;
+		}
+	}
 	return true;
 }
 
 void CPathPlanDlg::qmtomModule() 
 {
 	doc->m_Module[0].JntVar_trans=next_ang[0];
-	doc->jnt[0]=next_ang[0];
+	doc->jnt[0]=(float)next_ang[0];
 	for (int i = 1; i < 8; i++) {
-		int cons = next_ang[i]*180/PI;
+		double cons = next_ang[i]*180/PI;
 		doc->m_Module[i].JntVar_rot = cons;
 		doc->jnt[i] = cons;
 		this->m_JNT[i] = cons;
@@ -1406,7 +1391,7 @@ void CPathPlanDlg::qmtomModule()
 void CPathPlanDlg::ShowJntVariable()
 {
 	int i;	
-	double PEI[6], petemp[3];
+	double PEI[6];
 	Forwardkine_static(now_ang, PEI ); 
 	
 	////显示数据传递
@@ -1457,12 +1442,12 @@ void CPathPlanDlg::OnButtonIniok()
 			des_angle[i] = this->m_JNT[i]*PI/180;
 		}
 		Forwardkine_static(des_angle, PEend);
-		doc->des_px = PEend[0];
-		doc->des_py = PEend[1];
-		doc->des_pz = PEend[2];
-		doc->des_aif = PEend[3];
-		doc->des_bit = PEend[4];
-		doc->des_gam = PEend[5];
+		doc->des_px = (float)PEend[0];
+		doc->des_py = (float)PEend[1];
+		doc->des_pz = (float)PEend[2];
+		doc->des_aif = (float)PEend[3];
+		doc->des_bit = (float)PEend[4];
+		doc->des_gam = (float)PEend[5];
 
 		doc->Lineartestflag=true;
 		UpdateData(FALSE);
@@ -1543,7 +1528,7 @@ void CPathPlanDlg::OnButtonIniok()
 
 		UpdateData(FALSE);
 	}	
-	kn=m_time/t0;
+	kn=(int)m_time/t0;
 /*	if(ControlMode==1)
 	{
 		PmacGetResponseA(PMacdevice,buf,255,"j/");
@@ -1572,8 +1557,8 @@ void CPathPlanDlg::OnButtonRun()
 
 		for(int i=0;i<8;i++)
 		{	
-			ceta[0][i]=ini_ang[i];
-			ceta[1][i]=next_ang[i];//保存数据用
+			ceta[0][i]=(float)ini_ang[i];
+			ceta[1][i]=(float)next_ang[i];//保存数据用
 		 }
 		SetTimer(0,100,NULL);
 
@@ -1583,8 +1568,8 @@ void CPathPlanDlg::OnButtonRun()
 		CaptureCommand=AutoMotionPlan_line(ini_ang, basiniPE, GivenObj, wcm, VelocityLimit, CapOrientFlag, No+1,0,next_baspe, next_basvel, next_ang, next_angvel);
 		for(int i=0;i<8;i++)
 		{	
-			ceta[0][i]=ini_ang[i];
-			ceta[1][i]=next_ang[i];//保存数据用
+			ceta[0][i]=(float)ini_ang[i];
+			ceta[1][i]=(float)next_ang[i];//保存数据用
 		 }
 		SetTimer(1,100,NULL);
     }
@@ -1664,7 +1649,7 @@ void CPathPlanDlg::OnButtonStop()
 			PmacGetResponseA(PMacdevice,buf,255,"&1 R");
 			for (int i=1;i<8;i++)
 			{
-				PCube_setRampVel(device,i,2*PI/180);
+				PCube_setRampVel(device,i,(float)2*PI/180);
 			}
 		}
 		SetDlgItemText(IDC_BUTTON_STOP,"暂 停");}
@@ -1718,7 +1703,7 @@ void CPathPlanDlg::SendMessageToJXB()
 				1*PI/180);*/
 			::PCube_moveStep(device,
 				i,
-				send_ang[i],
+				(float)send_ang[i],
 				4000);
 	}
 /////////////////////导轨控制//////////////////////////////
@@ -1826,7 +1811,6 @@ void CPathPlanDlg::OnRadioProgramm()
 		t1=dlg.GetFileName();
 	int i,j;  
     float theta[7];
-	double PEI[6];
 	//////////////////////////////////////////////
     FILE *inputfile;
 	if(t1=="NULL") t1="NULLNAME.txt";
@@ -1918,25 +1902,25 @@ void CPathPlanDlg::linearMove(int direction) {
 		break;
 	}
 
-	doc->des_px = PEend[0];
-	doc->des_py = PEend[1];
-	doc->des_pz = PEend[2];
-	doc->des_aif = PEend[3];
-	doc->des_bit = PEend[4];
-	doc->des_gam = PEend[5];
+	doc->des_px = (float)PEend[0];
+	doc->des_py = (float)PEend[1];
+	doc->des_pz = (float)PEend[2];
+	doc->des_aif = (float)PEend[3];
+	doc->des_bit = (float)PEend[4];
+	doc->des_gam = (float)PEend[5];
 
 	doc->Lineartestflag=true;
 	UpdateData(FALSE);
 
-	kn = m_time/t0;
+	kn = (float)m_time/t0;
 	view->InvalidateRect(NULL, FALSE);
 
 	LinearMotionplan(ini_ang, basiniPE, PEint, PEend, m_time, m_ts, No, 0, next_baspe, next_basvel, next_ang, next_angvel);
 
 	for(int i=0;i<8;i++)
 	{	
-		ceta[0][i]=ini_ang[i];
-		ceta[1][i]=next_ang[i];//保存数据用
+		ceta[0][i]=(float)ini_ang[i];
+		ceta[1][i]=(float)next_ang[i];//保存数据用
 	}
 	SetTimer(0,100,NULL);
 	start_linear = clock();
@@ -2251,7 +2235,7 @@ void CPathPlanDlg::OnButtonCatchMode() {
 	{
 		::PCube_resetModule(device, i);
 		if (::PCube_getPos(device, i, &ff) == 0) {
-			cons = t*ff*180/PI;
+			cons = (float)t*ff*180/PI;
 			doc_real->m_Module[i].JntVar_rot = cons;
 			doc_real->jnt[i] = cons;
 			doc_real->angelset[i] = cons;
@@ -2260,7 +2244,7 @@ void CPathPlanDlg::OnButtonCatchMode() {
 
 	Sleep(3000);
 	for (int i = 1, t = -1; i < 8; i++, t *= -1) {
-		::PCube_moveRamp(device, i, t*angle[i]*PI/180, 2*PI/180, 4*PI/180);
+		::PCube_moveRamp(device, i, (float)t*angle[i]*PI/180, (float)2*PI/180, (float)4*PI/180);
 	}
 	
 	// to read goal from camera data and do path plan then.

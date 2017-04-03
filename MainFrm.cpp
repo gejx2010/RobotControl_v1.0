@@ -32,7 +32,6 @@ DWORD WINAPI recv_cam_data1(LPVOID dlg)
 	doc=view->GetDocument()->doc_delay; 
 	UINT port;
 	port=9300;
-	float data_str[255];//存放接收到的将要发来的数据的大小
 	CSocket m_socket,cliSock;
 	m_socket.Create(port);
 	//连接到发送端
@@ -65,8 +64,7 @@ DWORD WINAPI recv_cam_data1(LPVOID dlg)
 	unsigned char KeyWord=data[1];
 	int device=pframe->pSiderBar->pCtrlTab->pInitHardware->m_device;
 	char SendData[255];
-	float ceta[8];
-	int i,j;
+	int i;
 
 	switch (ColStatusWord)
 	{

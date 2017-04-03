@@ -134,7 +134,7 @@ void CRobotControlMultiDoc::PrintfBitmap( LPCTSTR lpszText, GLfloat x, GLfloat y
 	BITMAP bm;
 	SIZE size;
 	UCHAR* pBmpBits; //位图像素位
-	HFONT hOldFont;  //旧字体指针
+	// HFONT hOldFont;  //旧字体指针
 	HBITMAP hPrevBmp;
 	
 	HDC hdc = ::wglGetCurrentDC(); //获得当前设备场景
@@ -205,7 +205,7 @@ void CRobotControlMultiDoc::PrintfBitmap( LPCTSTR lpszText, GLfloat x, GLfloat y
 	
 	::glPixelStorei(GL_UNPACK_ALIGNMENT, 1); //控制像素存储
 	::glRasterPos3f(x,y,z);                  //
-	::glBitmap(size.cx, size.cy, 0.0, 0.0, size.cx, 0.0, pBmpBits); //写位图到缓存
+	::glBitmap((GLfloat)size.cx, (GLfloat)size.cy, 0.0, 0.0, (GLfloat)size.cx, 0.0, pBmpBits); //写位图到缓存
 	
 	delete pBmpBits;
 }

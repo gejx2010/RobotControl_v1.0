@@ -9,8 +9,10 @@
 #if _MSC_VER > 1000
 #pragma once
 #define NO_WARN_MBCS_MFC_DEPRECATION   //---乐----添加消除警报信息
+#define _CRT_SECURE_NO_WARNINGS // to disable deprecation with fopen, freopen and so on, added by gjx
 #endif // _MSC_VER > 1000
-
+#pragma warning(disable: 4244) // outlet the truncation error
+#pragma warning(disable: 4305) // outlet the truncation error
 #define VC_EXTRALEAN		// Exclude rarely-used stuff from Windows headers
 
 #include <afxwin.h>         // MFC core and standard components

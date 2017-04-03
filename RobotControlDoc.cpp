@@ -744,7 +744,7 @@ void CRobotControlDoc::RenderScene()
 	glPopMatrix(); 
 	}
 
-	if(AutoPlanFlag==true)    //末端轨迹跟踪
+	if(AutoPlanFlag)    //末端轨迹跟踪
 	{	
 		glPushMatrix();
 		glRotated(-90,0,0,1);
@@ -1116,7 +1116,7 @@ void CRobotControlDoc::DrawInfo()
 	gluLookAt(0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);  
 
 	CString strTemp;
-	int i=3,j;
+	int i=3;
 
 	double m_VelShoulder = 0.0;
 	double m_VelElbow = 0.0;
@@ -1251,7 +1251,7 @@ void CRobotControlDoc::PrintfBitmap( LPCTSTR lpszText, GLfloat x, GLfloat y, GLf
 	BITMAP bm;
 	SIZE size;
 	UCHAR* pBmpBits; //位图像素位
-	HFONT hOldFont;  //旧字体指针
+	//HFONT hOldFont;  //旧字体指针
 	HBITMAP hPrevBmp;
 	
 	HDC hdc = ::wglGetCurrentDC(); //获得当前设备场景

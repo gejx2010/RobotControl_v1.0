@@ -13,20 +13,21 @@
 
 struct PointCloud
 { 
-float  x;  
-float  y; 
-float  z; 
-float  r;  
-float  g;  
-float  b;  
-PointCloud( XnPoint3D pos, XnRGB24Pixel color )  
-{    x = pos.X*0.001;  
-y = pos.Y*0.001;  
-z = pos.Z*0.001;   
-r =color.nRed;//(float);//color.nRed / 255;  
-g = color.nGreen;//(float);//color.nGreen / 255;  
-b = color.nBlue;//(float)//color.nBlue / 255;
-}  
+	float  x;  
+	float  y; 
+	float  z; 
+	float  r;  
+	float  g;  
+	float  b;  
+	PointCloud( XnPoint3D pos, XnRGB24Pixel color )  
+	{    
+		x = (float)pos.X*0.001;  
+		y = (float)pos.Y*0.001;  
+		z = (float)pos.Z*0.001;   
+		r = color.nRed;//(float);//color.nRed / 255;  
+		g = color.nGreen;//(float);//color.nGreen / 255;  
+		b = color.nBlue;//(float)//color.nBlue / 255;
+	}  
 };
 
 class CVirtualScene : public CWnd

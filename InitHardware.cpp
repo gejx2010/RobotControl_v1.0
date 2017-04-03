@@ -18,7 +18,6 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 #define CODEANGTRANS 22.7555555555555556
-#define PI 3.14159265359
 #define DIAMETER 0.058
 float velocity;
 char stralpha[50];
@@ -190,19 +189,19 @@ void CInitHardware::OnButtonZero()
 	TCHAR buffer[255];
 	float v=0,p;
 	PmacGetResponseA(PMacdevice,buffer,255,"p");
-	p=atof(buffer);
+	p=(float)atof(buffer);
 	if (p>0)
 	{
 		PmacGetResponseA(PMacdevice,buffer,255,"i123=-32");
 		PmacGetResponseA(PMacdevice,buffer,255,"#1HM");
 		
-		while(v!=0.0|fabs(p)>30.0)
+		while(v!=0.0 || fabs(p)>30.0)
 		{
 			
 			PmacGetResponseA(PMacdevice,buffer,255,"v");
-			v=atof(buffer);
+			v=(float)atof(buffer);
 			PmacGetResponseA(PMacdevice,buffer,255,"p");
-			p=atof(buffer);
+			p=(float)atof(buffer);
 		}
 		PmacGetResponseA(PMacdevice,buffer,255,"k");
 		m_mail="Home Complete!";
@@ -215,13 +214,13 @@ void CInitHardware::OnButtonZero()
 		PmacGetResponseA(PMacdevice,buffer,255,"i123=32");
 		PmacGetResponseA(PMacdevice,buffer,255,"#1HM");
 		
-		while(v!=0.0|abs(p)>30.0)
+		while(v!=0.0||abs(p)>30.0)
 		{
 			
 			PmacGetResponseA(PMacdevice,buffer,255,"v");
-			v=atof(buffer);
+			v=(float)atof(buffer);
 			PmacGetResponseA(PMacdevice,buffer,255,"p");
-			p=atof(buffer);
+			p=(float)atof(buffer);
 		}
 		PmacGetResponseA(PMacdevice,buffer,255,"k");
 		m_mail="Home Complete!";
@@ -238,19 +237,19 @@ void CInitHardware::OnButtonReset()
 	TCHAR buffer[255];
 	float p;
 	PmacGetResponseA(PMacdevice,buffer,255,"p");
-	p=atof(buffer);
+	p=(float)atof(buffer);
 	while (abs(p)>50)
 	{
 		m_mail="Home Firstly!";
 		UpdateData(false);
 		OnButtonZero();
 		PmacGetResponseA(PMacdevice,buffer,255,"p");
-		p=atof(buffer);
+		p=(float)atof(buffer);
 		
 	}
 	
 	PmacGetResponseA(PMacdevice,buffer,255,"$$$***");
-	PmacDownloadA(PMacdevice,NULL,NULL,NULL,"E:\822.pmc",1,1,1,1);
+	PmacDownloadA(PMacdevice,NULL,NULL,NULL,"E:\\822.pmc",1,1,1,1);
 	PmacGetResponseA(PMacdevice,buffer,255,"sav");
 	m_mail="Reset Complete!";
 	UpdateData(false);
@@ -261,7 +260,7 @@ void CInitHardware::OnButtonMakesure()
 {
 	// TODO: Add your control notification handler code here
 	UpdateData(true);
-	velocity=(360*30*CODEANGTRANS*m_velocity)/(PI*DIAMETER*1000);
+	velocity=(float)(360*30*CODEANGTRANS*m_velocity)/(PI*DIAMETER*1000);
 	_gcvt(velocity,45,stralpha);
 	strcat(outstr1,stralpha);
 	m_mail="Velocity Set By Ready!";
@@ -275,10 +274,10 @@ void CInitHardware::OnButtonRun1()
 	TCHAR buffer[255];
 	char strbita[50];
 	char outstr2[100]="X";
-	float velocity,position;
+	float position;
 	UpdateData(true);
 
-	position=(360*30*CODEANGTRANS*m_absoposition)/(PI*DIAMETER*1000);
+	position=(float)(360*30*CODEANGTRANS*m_absoposition)/(PI*DIAMETER*1000);
 	_gcvt(position,45,strbita);
 	strcat(outstr2,strbita);
 
@@ -300,15 +299,15 @@ void CInitHardware::OnButtonRun1()
 	PmacGetResponseA(PMacdevice,buffer,255,"&1 B1 R");
 	float p,v;
 	PmacGetResponseA(PMacdevice,buffer,255,"p");
-	p=atof(buffer);
+	p=(float)atof(buffer);
 	PmacGetResponseA(PMacdevice,buffer,255,"v");
-	v=atof(buffer);
+	v=(float)atof(buffer);
 	while(abs(p-position)>50||v!=0)
 	{
 		PmacGetResponseA(PMacdevice,buffer,255,"p");
-		p=atof(buffer);
+		p=(float)atof(buffer);
 		PmacGetResponseA(PMacdevice,buffer,255,"v");
-		v=atof(buffer);
+		v=(float)atof(buffer);
 
 		PmacGetResponseA(PMacdevice,buffer,255,"?"); 
 		char b=buffer[9];
@@ -344,10 +343,10 @@ void CInitHardware::OnButtonRun2()
 	char outstr2[100]="X";
 	float position,p1;
 	PmacGetResponseA(PMacdevice,buffer,255,"p");
-	p1=atof(buffer);
+	p1=(float)atof(buffer);
 	UpdateData(true);
 	
-	position=(360*30*CODEANGTRANS*m_relaposition)/(PI*DIAMETER*1000);
+	position=(float)(360*30*CODEANGTRANS*m_relaposition)/(PI*DIAMETER*1000);
 	_gcvt(position,45,strbita);
 	strcat(outstr2,strbita);
 	
@@ -370,15 +369,15 @@ void CInitHardware::OnButtonRun2()
 	
 	float p,v;
 	PmacGetResponseA(PMacdevice,buffer,255,"p");
-	p=atof(buffer);
+	p=(float)atof(buffer);
 	PmacGetResponseA(PMacdevice,buffer,255,"v");
-	v=atof(buffer);
+	v=(float)atof(buffer);
 	while(abs(p-(position+p1))>50||v!=0)
 	{
 		PmacGetResponseA(PMacdevice,buffer,255,"p");
-		p=atof(buffer);
+		p=(float)atof(buffer);
 		PmacGetResponseA(PMacdevice,buffer,255,"v");
-		v=atof(buffer);
+		v=(float)atof(buffer);
 
 		PmacGetResponseA(PMacdevice,buffer,255,"?"); 
 		char b=buffer[9];
@@ -817,7 +816,6 @@ void CInitHardware::OnInitmodule()
 void CInitHardware::OnResetmodule() 
 {
 	// TODO: Add your command handler code here
-	int retval;
 	int i;
 	CString txt;
 	for(i=0;i<m_intCount;i++)
@@ -840,7 +838,6 @@ void CInitHardware::OnResetmodule()
 void CInitHardware::OnHaltmodule() 
 {
 	// TODO: Add your command handler code here
-	int retval;
 	int i;
 	CString txt;
 	for(i=0;i<m_intCount;i++)
@@ -864,7 +861,7 @@ void CInitHardware::OnHaltmodule()
 void CInitHardware::OnClickListModule(NMHDR* pNMHDR, LRESULT* pResult) 
 {
 	// TODO: Add your control notification handler code here
-	int i,nItem;
+	int nItem;
 	POSITION pos=m_ListCtrl.GetFirstSelectedItemPosition();
 	if (pos==NULL)
 		TRACE0("No items were selected!\n");
@@ -914,11 +911,11 @@ void CInitHardware::OnButtonExit()
 
 float CInitHardware::GetRadFromDegree(float deg)
 {
-	return ( deg * 2.0f * PI / 360.0f );
+	return (float)( deg * 2.0f * PI / 360.0f );
 }
 float CInitHardware::GetDegreeFromRad(float rad)
 {
-	return ( rad * 360.0f / (2.0f * PI) );
+	return (float)( rad * 360.0f / (2.0f * PI) );
 }
 void CInitHardware::OnButtonGo1() 
 {

@@ -20,7 +20,6 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 #define CODEANGTRANS 22.7555555555555556
-#define PI 3.14159265359f
 #define DIAMETER 0.058
 DWORD WINAPI HandControl(LPVOID dlg); //---乐---添加了个#define#define （？？？？）
 
@@ -128,7 +127,7 @@ void CHandControlDlg::OnRadioRotate()
 void CHandControlDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) 
 {
 	// TODO: Add your message handler code here and/or call default
-	ScrValue=((CSliderCtrl*)GetDlgItem(IDC_SLIDER_VELVALUE))->GetPos();
+	ScrValue=(float)((CSliderCtrl*)GetDlgItem(IDC_SLIDER_VELVALUE))->GetPos();
 	UpdateData(false);
 	CDialog::OnHScroll(nSBCode, nPos, pScrollBar);
 }
@@ -295,7 +294,7 @@ void CHandControlDlg::OnTimer(UINT nIDEvent)
 		{
 			VelValue=ScrValue*PI/1800;
 		}
-		for(int i=0; i<8; i++)
+		for(i=0; i<8; i++)
 		{
 			now_ang[i]=former_ang[i];
 			now_angvel[i]=former_angvel[i];
@@ -411,12 +410,11 @@ DWORD WINAPI HandControl(LPVOID dlg)
 
 
 	unsigned char ColStatusWord=data[0];
-	float* VelValue;
-	memcpy(VelValue,data+1,4);
-	
-		
-
+	float* VelValue = new float[4];
+	memcpy(VelValue,data+1,4);	
+	return 0;
 }
+
 void CHandControlDlg::qmtomModule() //--乐--模型显示
 {
 	doc->m_Module[0].JntVar_trans=next_ang[0];
@@ -429,21 +427,21 @@ void CHandControlDlg::qmtomModule() //--乐--模型显示
 	doc->m_Module[7].JntVar_rot=next_ang[7]*180/PI;
 	doc->No=No;
 	doc->numtime=numtime;
-	doc->jnt[0]=next_ang[0];
-	doc->jnt[1]=next_ang[1]*180/PI;
-	doc->jnt[2]=next_ang[2]*180/PI;
-	doc->jnt[3]=next_ang[3]*180/PI;
-    doc->jnt[4]=next_ang[4]*180/PI;
-	doc->jnt[5]=next_ang[5]*180/PI;
-	doc->jnt[6]=next_ang[6]*180/PI;
-	doc->jnt[7]=next_ang[7]*180/PI;
+	doc->jnt[0]=(float)next_ang[0];
+	doc->jnt[1]=(float)next_ang[1]*180/PI;
+	doc->jnt[2]=(float)next_ang[2]*180/PI;
+	doc->jnt[3]=(float)next_ang[3]*180/PI;
+    doc->jnt[4]=(float)next_ang[4]*180/PI;
+	doc->jnt[5]=(float)next_ang[5]*180/PI;
+	doc->jnt[6]=(float)next_ang[6]*180/PI;
+	doc->jnt[7]=(float)next_ang[7]*180/PI;
 	UpdateData(false); 
 }
 
 void CHandControlDlg::ShowJntVariable()
 {
 	int i;	
-	double PEI[6], petemp[3];
+	double PEI[6];
 	Forwardkine_static(now_ang, PEI ); 
 	//	doc->Pn[No][0]=PEI[0]; 
 	//	doc->Pn[No][1]=PEI[1]; 
@@ -491,15 +489,15 @@ void CHandControlDlg::OnButtonStoph()
 	}
 	float p,v;
 	PmacGetResponseA(PMacdevice,buf,255,"p");
-	p=atof(buf);
+	p=(float)atof(buf);
 	PmacGetResponseA(PMacdevice,buf,255,"v");
-	v=atof(buf);
+	v=(float)atof(buf);
 	while(abs(p-PosCts)>50||v!=0)
 	{
 			PmacGetResponseA(PMacdevice,buf,255,"p");
-			p=atof(buf);
+			p=(float)atof(buf);
 			PmacGetResponseA(PMacdevice,buf,255,"v");
-			v=atof(buf);
+			v=(float)atof(buf);
 
 			PmacGetResponseA(PMacdevice,buf,255,"?"); 
         	char b=buf[9];
@@ -600,7 +598,7 @@ void CHandControlDlg::SendMessageToJXB()
 //			16*PI/180);
 		::PCube_moveStep(device,
 				i,
-				send_ang[i],
+				(float)send_ang[i],
 				4000);
 
 	}
